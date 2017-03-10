@@ -17,4 +17,8 @@ public class Box {
 		return String.format("(%d, %d, %d)", height_, depth_, width_);
 		
 	}
+
+	public boolean isGreaterThan(Box box2) {
+		return (height_ > box2.height_) &&  (depth_ > box2.depth_) && (width_ > box2.width_) ;
+	}
 }
