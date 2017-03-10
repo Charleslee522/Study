@@ -18,7 +18,14 @@ public class Box {
 		
 	}
 
-	public boolean isGreaterThan(Box box2) {
-		return (height_ > box2.height_) &&  (depth_ > box2.depth_) && (width_ > box2.width_) ;
+	public boolean isGreaterThan(Box box) {
+		return (this.height_ > box.height_) &&  (this.depth_ > box.depth_) && (this.width_ > box.width_) ;
+	}
+	
+	public boolean canStack(Box box) {
+		if(box == null) {
+			return true;
+		}
+		return (this.height_) < (box.height_) && (this.depth_ < box.depth_) && (this.width_ < box.width_);
 	}
 }

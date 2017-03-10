@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 public class StackBox {
@@ -63,13 +64,12 @@ public class StackBox {
 			public int compare(Box o1, Box o2) {
 				return o2.height_ - o1.height_;
 			}
-			
 		});
 
 		return getMaxHeightBoxNaiveList(boxStack, new ArrayList<Box>(), 0);
 	}
 	
-	public static List<Box> getMaxHeightBoxNewList(ArrayList<Box> boxStack) {
+	public static ArrayList<Box> getMaxHeightBoxListOrdered(ArrayList<Box> boxStack) {
 
 		Collections.sort(boxStack, new Comparator<Box>(){
 			@Override
@@ -78,10 +78,42 @@ public class StackBox {
 			}
 			
 		});
+		
+		if(boxStack.isEmpty()) {
+			return new ArrayList<Box>();
+		}
 
-		return getMaxHeightBoxNaiveList(boxStack, new ArrayList<Box>(), 0);
+		return getMaxHeightBoxListOrdered(boxStack, null, 0);
 	}
 	
+	public static ArrayList<Box> getMaxHeightBoxListCached(ArrayList<Box> boxStack) {
+
+		Collections.sort(boxStack, new Comparator<Box>(){
+			@Override
+			public int compare(Box o1, Box o2) {
+				return o2.height_ - o1.height_;
+			}
+			
+		});
+		
+		if(boxStack.isEmpty()) {
+			return new ArrayList<Box>();
+		}
+		HashMap<Box, ArrayList<Box>> map = new HashMap<Box, ArrayList<Box>>();
+
+		return getMaxHeightBoxListCached(boxStack, null, map);
+	}
+	
+	public static ArrayList<Box> getMaxHeightBoxListRecursive(ArrayList<Box> boxStack) {
+		
+		if(boxStack.isEmpty()) {
+			return new ArrayList<Box>();
+		}
+
+		return getMaxHeightBoxListRecursive(boxStack, null);
+	}
+	
+	@SuppressWarnings("unchecked")
 	public static ArrayList<Box> getMaxHeightBoxNaiveList(ArrayList<Box> boxList, ArrayList<Box> subList, int index) {
 		if(boxList.isEmpty()) {
 			return new ArrayList<Box>();
@@ -110,11 +142,81 @@ public class StackBox {
 		}
 	}
 	
-	public static ArrayList<Box> getMaxHeightBoxNewList(ArrayList<Box> boxList, Box bottom) {
-		if(boxList.isEmpty()) {
-			return new ArrayList<Box>();
+	public static ArrayList<Box> getMaxHeightBoxListOrdered(ArrayList<Box> boxList, Box bottom, int idx) {
+		ArrayList<Box> maxStack = null;
+		int maxHeight = 0;
+		//for(Box box : boxList) {
+		for(int i = idx; i < boxList.size(); ++i) {
+			if(boxList.get(i).canStack(bottom)) {
+				ArrayList<Box> tmpList = getMaxHeightBoxListOrdered(boxList, boxList.get(i), idx + 1);
+				int height = getMaxHeight(tmpList);
+				if(maxHeight < height) {
+					maxHeight = height;
+					maxStack = tmpList;
+				}
+			}
 		}
-		return boxList;
+		if(maxStack == null) {
+			maxStack = new ArrayList<Box>();
+		}
+		if(bottom != null) {
+			maxStack.add(0, bottom);
+		}
+
+		return maxStack;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static ArrayList<Box> getMaxHeightBoxListCached(ArrayList<Box> boxList, Box bottom, HashMap<Box, ArrayList<Box>> cacheMap) {
+		ArrayList<Box> maxStack = null;
+		int maxHeight = 0;
+		for(Box box : boxList) {
+			if(box.canStack(bottom)) {
+				ArrayList<Box> tmpList = null;
+				if(cacheMap.containsKey(bottom)) {
+					tmpList = cacheMap.get(bottom);
+				} else {
+					tmpList = getMaxHeightBoxListCached(boxList, box, cacheMap);
+				}
+				int height = getMaxHeight(tmpList);
+				if(maxHeight < height) {
+					maxHeight = height;
+					maxStack = tmpList;
+				}
+			}
+		}
+		if(maxStack == null) {
+			maxStack = new ArrayList<Box>();
+		}
+		if(bottom != null) {
+			maxStack.add(0, bottom);
+		}
+		cacheMap.put(bottom, maxStack);
+
+		return (ArrayList<Box>)maxStack.clone();
+	}
+	
+	public static ArrayList<Box> getMaxHeightBoxListRecursive(ArrayList<Box> boxList, Box bottom) {
+		ArrayList<Box> maxStack = null;
+		int maxHeight = 0;
+		for(Box box : boxList) {
+			if(box.canStack(bottom)) {
+				ArrayList<Box> tmpList = getMaxHeightBoxListRecursive(boxList, box);
+				int height = getMaxHeight(tmpList);
+				if(maxHeight < height) {
+					maxHeight = height;
+					maxStack = tmpList;
+				}
+			}
+		}
+		if(maxStack == null) {
+			maxStack = new ArrayList<Box>();
+		}
+		if(bottom != null) {
+			maxStack.add(0, bottom);
+		}
+
+		return maxStack;
 	}
 	
 	private static boolean canStack(ArrayList<Box> boxList, int index, int index2) {
